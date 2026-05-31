@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nectar & Essence | Premium Honey & Natural Oils</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Alpine.js for interactive state management (Cart, Tabs, Filters) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #fdfbf7;
+        }
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+    </style>
+</head>
+<body x-data="{ 
+    currentPage: 'home', 
+    cart: [], 
+    cartOpen: false,
+    wishlist: [],
+    productFilter: 'all',
+    productSort: 'default',
+    
+    addToCart(product) {
+        let found = this.cart.find(item => item.id === product.id);
+        if (found) {
+            found.quantity++;
+        } else {
+            this.cart.push({ ...product, quantity: 1 });
+        }
+    },
+    removeFromCart(index) {
+        this.cart.splice(index, 1);
+    },
+    get cartTotal() {
+        return this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    },
+    toggleWishlist(id) {
+        if (this.wishlist.includes(id)) {
+            this.wishlist = this.wishlist.filter(item => item !== id);
+        } else {
+            this.wishlist.push(id);
+        }
+    }
+}">
+
+    <!-- --- STICKY NAVIGATION BAR --- -->
+    <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-stone-100 shadow-sm transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <a href="#" @click.prevent="currentPage = 'home'" class="flex items-center space-x-2 group">
+                <span class="text-2xl md:text-3xl font-serif font-bold text-amber-600 transition-colors group-hover:text-amber-700">Nectar<span class="text-emerald-700">&</span>Essence</span>
+            </a>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex space-x-8 text-sm font-medium text-stone-600">
+                <a href="#" @click.prevent="currentPage = 'home'" :class="currentPage === 'home' ? 'text-amber-600 border-b-2 border-amber-500 pb-1' : 'hover:text-emerald-700 transition-colors'">Home</a>
+                <a href="#" @click.prevent="currentPage = 'products'" :class="currentPage === 'products' ? 'text-amber-600 border-b-2 border-amber-500 pb-1' : 'hover:text-emerald-700 transition-colors'">Shop Products</a>
+                <a href="#" @click.prevent="currentPage = 'about'" :class="currentPage === 'about' ? 'text-amber-600 border-b-2 border-amber-500 pb-1' : 'hover:text-emerald-700 transition-colors'">Our Story</a>
+                <a href="#" @click.prevent="currentPage = 'contact'" :class="currentPage === 'contact' ? 'text-amber-600 border-b-2 border-amber-500 pb-1' : 'hover:text-emerald-700 transition-colors'">Contact Us</a>
+            </nav>
+
+            <!-- Action Icons (Wishlist, Cart) -->
+            <div class="flex items-center space-x-4">
+                <button @click="currentPage = 'products'; productFilter = 'all'" class="text-stone-600 hover:text-amber-600 transition-colors relative" title="Wishlist">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6" :class="wishlist.length ? 'fill-red-500 stroke-red-500' : ''">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                    </svg>
+                    <span x-show="wishlist.length" x-text="wishlist.length" class="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center"></span>
+                </button>
+                
+                <button @click="cartOpen = !cartOpen" class="text-stone-600 hover:text-emerald-700 transition-colors relative" title="Shopping Cart">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    </svg>
+                    <span x-show="cart.length" x-text="cart.reduce((a, b) => a + b.quantity, 0)" class="absolute -top-2 -right-2 bg-emerald-600 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center"></span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Mobile Bottom Nav -->
+        <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-stone-200 z-50 flex justify-around py-3 shadow-lg">
+            <button @click="currentPage = 'home'" class="flex flex-col items-center text-xs" :class="currentPage === 'home' ? 'text-amber-600' : 'text-stone-500'">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+                <span>Home</span>
+            </button>
+            <button @click="currentPage = 'products'" class="flex flex-col items-center text-xs" :class="currentPage === 'products' ? 'text-amber-600' : 'text-stone-500'">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.5a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" /></svg>
+                <span>Shop</span>
+            </button>
+            <button @click="currentPage = 'about'" class="flex flex-col items-center text-xs" :class="currentPage === 'about' ? 'text-amber-600' : 'text-stone-500'">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-.778.099-1.533.284-2.253" /></svg>
+                <span>Story</span>
+            </button>
+            <button @click="currentPage = 'contact'" class="flex flex-col items-center text-xs" :class="currentPage === 'contact' ? 'text-amber-600' : 'text-stone-500'">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-2.824-1.802-5.174-4.154-6.977-6.977l1.293-.97c.362-.271.528-.734.417-1.173L6.963 3.107a1.242 1.242 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg>
+                <span>Contact</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- --- SIDEBAR CART PANEL --- -->
+    <div x-show="cartOpen" class="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true" style="display: none;">
+        <div class="absolute inset-0 overflow-hidden">
+            <div @click="cartOpen = false" class="absolute inset-0 bg-stone-500/75 backdrop-blur-sm transition-opacity" aria-hidden="true"></div>
+            <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+                <div class="pointer-events-auto w-screen max-w-md bg-white shadow-2xl flex flex-col h-full">
+                    <div class="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
+                        <div class="flex items-start justify-between">
+                            <h2 class="text-lg font-medium text-stone-900" id="slide-over-title">Your Shopping Cart</h2>
+                            <button @click="cartOpen = false" class="text-stone-400 hover:text-stone-500">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                            </button>
+                        </div>
+
+                        <div class="mt-8">
+                            <template x-if="cart.length === 0">
+                                <div class="text-center py-12 text-stone-500">
+                                    <p class="font-serif italic text-lg mb-4">Your basket is empty.</p>
+                                    <button @click="cartOpen = false; currentPage = 'products'" class="text-amber-600 underline font-medium">Browse our products</button>
+                                </div>
+                            </template>
+
+                            <div class="flow-root">
+                                <ul role="list" class="-my-6 divide-y divide-stone-200">
+                                    <template x-for="(item, index) in cart" :key="index">
+                                        <li class="flex py-6">
+                                            <div class="h-24 w-24 shrink-0 overflow-hidden rounded-md border border-stone-200">
+                                                <img :src="item.image" :alt="item.name" class="h-full w-full object-cover object-center">
+                                            </div>
+                                            <div class="ml-4 flex flex-1 flex-col">
+                                                <div>
+                                                    <div class="flex justify-between text-base font-medium text-stone-900">
+                                                        <h3 x-text="item.name"></h3>
+                                                        <p class="ml-4 text-emerald-800 font-semibold" x-text="(item.price * item.quantity) + ' MAD'"></p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex flex-1 items-end justify-between text-sm">
+                                                    <p class="text-stone-500" x-text="'Qty ' + item.quantity"></p>
+                                                    <button @click="removeFromCart(index)" class="font-medium text-red-600 hover:text-red-500">Remove</button>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="cart.length > 0" class="border-t border-stone-200 px-4 py-6 sm:px-6 bg-stone-50">
+                        <div class="flex justify-between text-base font-medium text-stone-900">
+                            <p>Subtotal</p>
+                            <p class="text-xl font-bold text-emerald-800" x-text="cartTotal + ' MAD'"></p>
+                        </div>
+                        <p class="mt-0.5 text-sm text-stone-500">Shipping and taxes calculated at checkout.</p>
+                        <div class="mt-6">
+                            <button @click="alert('Proceeding to secure checkout via Moroccan Payment Gateways...'); cart = []; cartOpen = false;" class="w-full flex items-center justify-center rounded-md border border-transparent bg-amber-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-amber-700 transition-colors">
+                                Secure Checkout
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- HOME PAGE -->
+    <!-- ========================================================================= -->
+    <main x-show="currentPage === 'home'">
+        <!-- --- HERO SECTION --- -->
+        <section class="relative bg-stone-900 h-[650px] flex items-center overflow-hidden">
+            <div class="absolute inset-0 z-0">
+                <img src="https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&q=80&w=1920" alt="Honey Concept" class="w-full h-full object-cover opacity-40 transform scale-105 transition-transform duration-10000">
+            </div>
+            <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10 text-white w-full">
+                <span class="text-amber-400 font-semibold tracking-widest uppercase text-xs md:text-sm bg-amber-400/10 px-3 py-1.5 rounded-full border border-amber-400/20">100% Pure & Organic</span>
+                <h1 class="mt-6 text-4xl md:text-6xl font-serif font-bold max-w-2xl leading-tight">
+                    Pure Nature, Direct to Your Home
+                </h1>
+                <p class="mt-4 text-base md:text-xl text-stone-200 max-w-lg font-light leading-relaxed">
+                    Discover premium, raw Moroccan honey and artisanal botanical oils meticulously crafted for your holistic wellness journey.
+                </p>
+                <div class="mt-10 flex flex-wrap gap-4">
+                    <button @click="currentPage = 'products'" class="bg-amber-500 text-stone-900 hover:bg-amber-400 transition-all font-semibold px-8 py-3.5 rounded-md shadow-lg shadow-amber-500/20 transform hover:-translate-y-0.5">
+                        Shop Collection
+                    </button>
+                    <button @click="currentPage = 'about'" class="border-2 border-white/80 hover:border-white text-white hover:bg-white/10 transition-all font-semibold px-8 py-3.5 rounded-md backdrop-blur-sm">
+                        Our Sourcing Story
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- --- VALUE PROPOSITION SECTION --- -->
+        <section class="py-16 bg-white border-b border-stone-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div class="flex items-start space-x-4">
+                        <div class="p-3 bg-amber-50 rounded-xl text-amber-600 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39.1593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" /></svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-stone-900">100% Certified Pure</h3>
+                            <p class="text-sm text-stone-500 mt-1">Unfiltered, unpasteurized, absolutely zero additives.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <div class="p-3 bg-emerald-50 rounded-xl text-emerald-700 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-.778.099-1.533.284-2.253" /></svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-stone-900">Ethical Sourcing</h3>
+                            <p class="text-sm text-stone-500 mt-1">Supporting traditional Atlas beekeepers sustainably.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <div class="p-3 bg-amber-50 rounded-xl text-amber-600 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25c0-.446-.26-.846-.67-1.033l-2.33-1.06a1.242 1.242 0 0 0-.532-.12h-2.264m4.13 6.25H8.25m11.422-3.472A3.536 3.536 0 0 0 18 10.25h-.008a1.75 1.75 0 0 1-1.75-1.75V4.5A1.75 1.75 0 0 0 14.5 2.75h-5.25a1.75 1.75 0 0 0-1.75 1.75v10.5A1.75 1.75 0 0 0 9.25 18.25h5.625" /></svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-stone-900">National Delivery</h3>
+                            <p class="text-sm text-stone-500 mt-1">Fast and safe delivery across all Moroccan cities.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start space-x-4">
+                        <div class="p-3 bg-emerald-50 rounded-xl text-emerald-700 shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.03 0 1.9.693 2.166 1.638m-7.377 2.24a4.5 4.5 0 1 1-1.5 0V5.37m0-1.357c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h.005a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-1.4 0A2.251 2.251 0 0 1 7.5 2.25H9c1.03 0 1.9.693 2.166 1.638m-11.3 17.11a3 3 0 0 0 4.243 0L18.7 8.53a3 3 0 0 0 0-4.243L17.287 2.86a3 3 0 0 0-4.242 0L1.732 14.17a3 3 0 0 0 0 4.243l1.414 1.415z" /></svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-stone-900">Lab-Tested</h3>
+                            <p class="text-sm text-stone-500 mt-1">Every batch analyzed for moisture and authenticity.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- --- EXPLORE CATEGORIES --- -->
+        <section class="py-20 bg-[#faf8f4]">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-xl mx-auto mb-16">
+                    <h2 class="text-3xl font-serif font-bold text-stone-900">Curated Categories</h2>
+                    <div class="w-12 h-1 bg-amber-500 mx-auto mt-4 rounded"></div>
+                    <p class="text-stone-500 mt-4">Nurtured by the sun and rich soils of Morocco's high altitudes and valleys.</p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Cat 1 -->
+                    <div @click="currentPage = 'products'; productFilter = 'honey'" class="group relative rounded-2xl overflow-hidden h-96 cursor-pointer shadow-md">
+                        <img src="https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&q=80&w=600" alt="Premium Honey" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/20 to-transparent flex flex-col justify-end p-8">
+                            <h3 class="text-2xl font-serif font-bold text-white">Artisanal Honey</h3>
+                            <p class="text-amber-300 text-sm mt-1">Eucalyptus, Euphorbia, and Wildflower varieties</p>
+                        </div>
+                    </div>
+                    <!-- Cat 2 -->
+                    <div @click="currentPage = 'products'; productFilter = 'essential'" class="group relative rounded-2xl overflow-hidden h-96 cursor-pointer shadow-md">
+                        <img src="https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=600" alt="Essential Oils" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/20 to-transparent flex flex-col justify-end p-8">
+                            <h3 class="text-2xl font-serif font-bold text-white">Essential Oils</h3>
+                            <p class="text-emerald-300 text-sm mt-1">Pure steam-distilled botanical essences</p>
+                        </div>
+                    </div>
+                    <!-- Cat 3 -->
+                    <div @click="currentPage = 'products'; productFilter = 'herbal'" class="group relative rounded-2xl overflow-hidden h-96 cursor-pointer shadow-md">
+                        <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&q=80&w=600" alt="Cold Pressed Oils" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-stone-950/80 via-stone-950/20 to-transparent flex flex-col justify-end p-8">
+                            <h3 class="text-2xl font-serif font-bold text-white">Cold-Pressed Oils</h3>
+                            <p class="text-amber-300 text-sm mt-1">Organic Argan, Prickly Pear, and Almond oils</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- --- FEATURED PRODUCTS --- -->
+        <section class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+                    <div>
+                        <h2 class="text-3xl font-serif font-bold text-stone-900">Customer Favorites</h2>
+                        <p class="text-stone-500 mt-2">Our top-reviewed, nutrient-rich seasonal specials.</p>
+                    </div>
+                    <button @click="currentPage = 'products'; productFilter = 'all'" class="mt-4 md:mt-0 text-amber-600 font-semibold inline-flex items-center space-x-1 hover:text-amber-700 transition-colors group">
+                        <span>View All Products</span>
+                        <span class="transform group-hover:translate-x-1 transition-transform">&rarr;</span>
+                    </button>
+                </div>
+
+                <!-- Static selection of 4 featured products -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Prod 1 -->
+                    <div class="group bg-[#faf8f4] p-4 rounded-2xl border border-stone-100 transition-all hover:shadow-xl hover:-translate-y-1">
+                        <div class="relative bg-white rounded-xl overflow-hidden aspect-square shadow-sm mb-4">
+                            <img src="https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&q=80&w=400" alt="Pure Atlas Honey" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        </div>
+                        <h3 class="font-serif font-bold text-stone-900 text-lg">Pure Atlas Euphorbia Honey (Daghmous)</h3>
+                        <p class="text-xs text-stone-500 mt-1 line-clamp-2">Authentic traditional honey from the Atlas Mountains, known for its distinct warmth.</p>
+                        <div class="mt-4 flex items-center justify-between">
+                            <span class="text-xl font-bold text-emerald-800">250 MAD</span>
+                            <button @click="addToCart({id: 1, name: 'Atlas Euphorbia Honey', price: 250, image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&q=80&w=400'})" class="bg-amber-500 text-stone-900 hover:bg-amber-600 p-2.5 rounded-xl transition-colors shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Prod 2 -->
+                    <div class="group bg-[#faf8f4] p-4 rounded-2xl border border-stone-100 transition-all hover:shadow-xl hover:-translate-y-1">
+                        <div class="relative bg-white rounded-xl overflow-hidden aspect-square shadow-sm mb-4">
+                            <img src="https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=400" alt="Pure Argan Oil" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        </div>
+                        <h3 class="font-serif font-bold text-stone-900 text-lg">Premium Organic Cosmetic Argan Oil</h3>
+                        <p class="text-xs text-stone-500 mt-1 line-clamp-2">Extra-virgin cold pressed extraction for luxury skin and hair repair routines.</p>
+                        <div class="mt-4 flex items-center justify-between">
+                            <span class="text-xl font-bold text-emerald-800">180 MAD</span>
+                            <button @click="addToCart({id: 4, name: 'Cosmetic Argan Oil', price: 180, image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=400'})" class="bg-amber-500 text-stone-900 hover:bg-amber-600 p-2.5 rounded-xl transition-colors shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Prod 3 -->
+                    <div class="group bg-[#faf8f4] p-4 rounded-2xl border border-stone-100 transition-all hover:shadow-xl hover:-translate-y-1">
+                        <div class="relative bg-white rounded-xl overflow-hidden aspect-square shadow-sm mb-4">
+                            <img src="https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&q=80&w=400" alt="Eucalyptus Honey" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        </div>
+                        <h3 class="font-serif font-bold text-stone-900 text-lg">Wild Eucalyptus Flower Honey</h3>
+                        <p class="text-xs text-stone-500 mt-1 line-clamp-2">Aromatic herbal undertones. Ideal for soothing respiratory paths and morning teas.</p>
+                        <div class="mt-4 flex items-center justify-between">
+                            <span class="text-xl font-bold text-emerald-800">140 MAD</span>
+                            <button @click="addToCart({id: 2, name: 'Eucalyptus Flower Honey', price: 140, image: 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&q=80&w=400'})" class="bg-amber-500 text-stone-900 hover:bg-amber-600 p-2.5 rounded-xl transition-colors shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Prod 4 -->
+                    <div class="group bg-[#faf8f4] p-4 rounded-2xl border border-stone-100 transition-all hover:shadow-xl hover:-translate-y-1">
+                        <div class="relative bg-white rounded-xl overflow-hidden aspect-square shadow-sm mb-4">
+                            <img src="https://images.unsplash.com/photo-1608571424266-edeb9bbefaea?auto=format&fit=crop&q=80&w=400" alt="Prickly Pear Oil" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
+                        </div>
+                        <h3 class="font-serif font-bold text-stone-900 text-lg">Pure Prickly Pear Seed Youth Elixir</h3>
+                        <p class="text-xs text-stone-500 mt-1 line-clamp-2">One of nature's rarest botanical miracles. Powerful antioxidant anti-aging treatment.</p>
+                        <div class="mt-4 flex items-center justify-between">
+                            <span class="text-xl font-bold text-emerald-800">450 MAD</span>
+                            <button @click="addToCart({id: 5, name: 'Prickly Pear Seed Elixir', price: 450, image: 'https://images.unsplash.com/photo-1608571424266-edeb9bbefaea?auto=format&fit=crop&q=80&w=400'})" class="bg-amber-500 text-stone-900 hover:bg-amber-600 p-2.5 rounded-xl transition-colors shadow-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- --- TESTIMONIALS --- -->
+        <section class="py-20 bg-stone-50 border-t border-stone-100">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center max-w-xl mx-auto mb-12">
+                    <h2 class="text-3xl font-serif font-bold text-stone-900">What Our Community Says</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-stone-100">
+                        <div class="flex text-amber-400 mb-4">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <p class="text-stone-600 italic">"The Daghmous honey is exactly like what my grandfather used to buy from traditional souks. Pure, raw, and hits the throat perfectly."</p>
+                        <div class="mt-6 font-semibold text-stone-900 text-sm">— Youssef K., Casablanca</div>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-stone-100">
+                        <div class="flex text-amber-400 mb-4">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <p class="text-stone-600 italic">"I have used the Prickly Pear oil for two weeks now. The hyperpigmentation around my eyes is fading incredibly fast. Incredible quality!"</p>
+                        <div class="mt-6 font-semibold text-stone-900 text-sm">— Amina M., Rabat</div>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-stone-100">
+                        <div class="flex text-amber-400 mb-4">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                        <p class="text-stone-600 italic">"Delivered overnight to Marrakech. Packaging was beautiful and fully plastic-free. Will definitely be a regular customer now."</p>
+                        <div class="mt-6 font-semibold text-stone-900 text-sm">— Sofia T., Marrakech</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- ABOUT PAGE -->
+    <!-- ========================================================================= -->
+    <main x-show="currentPage === 'about'" class="py-12 bg-white">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <span class="text-emerald-700 font-semibold tracking-wider text-xs uppercase">Rooted in Tradition</span>
+                <h1 class="text-4xl md:text-5xl font-serif font-bold text-stone-900 mt-2">Crafting Pure Moroccan Liquid Gold</h1>
+                <div class="w-12 h-1 bg-amber-500 mx-auto mt-4 rounded"></div>
+            </div>
+
+            <!-- Graphic section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-20">
+                <div>
+                    <img src="https://images.unsplash.com/photo-1473081556163-2a17de81fc97?auto=format&fit=crop&q=80&w=600" alt="Beekeeping" class="rounded-2xl shadow-lg w-full h-[400px] object-cover">
+                </div>
+                <div>
+                    <h2 class="text-2xl font-serif font-bold text-stone-900 mb-4">Our Sourcing & Philosophy</h2>
+                    <p class="text-stone-600 leading-relaxed mb-4">
+                        Born out of reverence for the diverse Moroccan biome, <strong class="text-amber-700">Nectar & Essence</strong> collaborates directly with local multi-generational beekeeping families in the high ridges of the Atlas Mountains and cold-pressing women cooperatives across Souss-Massa.
+                    </p>
+                    <p class="text-stone-600 leading-relaxed">
+                        We avoid fast industrialized processing paths. Our raw honeys are left untouched by micro-filtration and heavy thermal treatments, preserving every grain of wild flower pollen, living enzyme, and trace mineral provided natively by the bees.
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 bg-stone-50 p-8 rounded-2xl border border-stone-100 text-center">
+                <div>
+                    <h3 class="text-xl font-serif font-bold text-stone-900 mb-2">Purity First</h3>
+                    <p class="text-sm text-stone-500">Every single jar can be traced comprehensively down to the precise cooperative apiary plot.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-serif font-bold text-stone-900 mb-2">Sustainable Apiculture</h3>
+                    <p class="text-sm text-stone-500">We verify that our hives remain protected from heavy commercial chemicals and industrial over-harvesting.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-serif font-bold text-stone-900 mb-2">Empowering Cooperatives</h3>
+                    <p class="text-sm text-stone-500">More than 65% of your product yields circulate directly back into fair-trade women-led local extraction groups.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- PRODUCTS PAGE (WITH CLIENT-SIDE APPLICATION DRIVEN BY ALPINE JS) -->
+    <!-- ========================================================================= -->
+    <main x-show="currentPage === 'products'" class="py-12 bg-[#fdfbf7]" 
+            x-data="{
+                allProducts: [
+                    { id: 1, type: 'honey', subtype: 'honey', name: 'Pure Atlas Euphorbia Honey (Daghmous)', desc: 'Harvested from arid valley slopes. Spicy sensation with potent healing profile.', price: 250, image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&q=80&w=400' },
+                    { id: 2, type: 'honey', subtype: 'honey', name: 'Wild Eucalyptus Flower Honey', desc: 'Aromatic herbal notes. Perfect companion for cold months and breakfast bowls.', price: 140, image: 'https://images.unsplash.com/photo-1471193945509-9ad0617afabf?auto=format&fit=crop&q=80&w=400' },
+                    { id: 3, type: 'honey', subtype: 'honey', name: 'Premium Sidr (Jujubier) Honey', desc: 'Precious mono-floral honey prized worldwide for unparalleled holistic strength.', price: 480, image: 'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?auto=format&fit=crop&q=80&w=400' },
+                    { id: 4, type: 'oil', subtype: 'herbal', name: 'Premium Organic Cosmetic Argan Oil', desc: 'Pure unfragranced gold standard serum for luminous dermal cell renewal.', price: 180, image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&q=80&w=400' },
+                    { id: 5, type: 'oil', subtype: 'herbal', name: 'Pure Prickly Pear Seed Youth Elixir', desc: 'Intensely cold pressed. Exceptionally dense Vitamin E hydration agent.', price: 450, image: 'https://images.unsplash.com/photo-1608571424266-edeb9bbefaea?auto=format&fit=crop&q=80&w=400' },
+                    { id: 6, type: 'oil', subtype: 'essential', name: 'Organic Atlas Rosemary Essential Oil', desc: 'Steam-distilled concentrated botanical essence for clarifying micro-circulation.', price: 95, image: 'https://images.unsplash.com/photo-1617897903246-719242758050?auto=format&fit=crop&q=80&w=400' }
+                ],
+                get filteredProducts() {
+                    let items = [...this.allProducts];
+                    if (this.productFilter !== 'all') {
+                        items = items.filter(p => p.type === this.productFilter || p.subtype === this.productFilter);
+                    }
+                    if (this.productSort === 'low-high') {
+                        items.sort((a,b) => a.price - b.price);
+                    } else if (this.productSort === 'high-low') {
+                        items.sort((a,b) => b.price - a.price);
+                    }
+                    return items;
+                }
+            }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-10 text-center md:text-left">
+                <h1 class="text-3xl font-serif font-bold text-stone-900">The Natural Dispensary</h1>
+                <p class="text-stone-500 mt-1">Sustainably packaged in reusable protective amber glass jars.</p>
+            </div>
+
+            <!-- Shop controls -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-stone-100 mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <!-- Filters -->
+                <div class="flex flex-wrap gap-2">
+                    <button @click="productFilter = 'all'" :class="productFilter === 'all' ? 'bg-amber-600 text-white' : 'bg-stone-50 text-stone-700 hover:bg-stone-100'" class="px-4 py-2 text-xs font-semibold rounded-lg transition-colors">All Products</button>
+                    <button @click="productFilter = 'honey'" :class="productFilter === 'honey' ? 'bg-amber-600 text-white' : 'bg-stone-50 text-stone-700 hover:bg-stone-100'" class="px-4 py-2 text-xs font-semibold rounded-lg transition-colors">Pure Honey</button>
+                    <button @click="productFilter = 'essential'" :class="productFilter === 'essential' ? 'bg-amber-600 text-white' : 'bg-stone-50 text-stone-700 hover:bg-stone-100'" class="px-4 py-2 text-xs font-semibold rounded-lg transition-colors">Essential Oils</button>
+                    <button @click="productFilter = 'herbal'" :class="productFilter === 'herbal' ? 'bg-amber-600 text-white' : 'bg-stone-50 text-stone-700 hover:bg-stone-100'" class="px-4 py-2 text-xs font-semibold rounded-lg transition-colors">Cold-Pressed Oils</button>
+                </div>
+                <!-- Sorter -->
+                <div>
+                    <select x-model="productSort" class="bg-stone-50 text-stone-700 rounded-lg p-2 text-xs font-semibold border-none focus:ring-2 focus:ring-amber-500">
+                        <option value="default">Sort by: Relevance</option>
+                        <option value="low-high">Price: Low to High</option>
+                        <option value="high-low">Price: High to Low</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dynamic Product Grid Layout -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <template x-for="prod in filteredProducts" :key="prod.id">
+                    <div class="group bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden transition-all hover:shadow-xl flex flex-col justify-between">
+                        <div>
+                            <div class="relative bg-stone-100 aspect-video w-full overflow-hidden">
+                                <img :src="prod.image" :alt="prod.name" class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500">
+                                <button @click="toggleWishlist(prod.id)" class="absolute top-3 right-3 p-2 bg-white/80 backdrop-blur-md rounded-full shadow-sm text-stone-600 hover:text-red-500 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" :fill="wishlist.includes(prod.id) ? 'red' : 'none'" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" :class="wishlist.includes(prod.id) ? 'text-red-500' : ''">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="p-6">
+                                <span class="text-[10px] tracking-wider font-bold uppercase text-amber-600" x-text="prod.type"></span>
+                                <h3 class="font-serif font-bold text-stone-900 text-xl mt-1 group-hover:text-emerald-800 transition-colors" x-text="prod.name"></h3>
+                                <p class="text-xs text-stone-500 mt-2 leading-relaxed" x-text="prod.desc"></p>
+                            </div>
+                        </div>
+                        <div class="p-6 pt-0 border-t border-stone-50 mt-4 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-stone-400 block">Price</span>
+                                <span class="text-xl font-bold text-stone-900" x-text="prod.price + ' MAD'"></span>
+                            </div>
+                            <button @click="addToCart(prod)" class="bg-stone-950 text-white hover:bg-emerald-800 font-semibold text-xs px-4 py-2.5 rounded-lg transition-colors shadow-sm flex items-center space-x-1.5">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>
+                                <span>Add to Cart</span>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- ========================================================================= -->
+    <!-- CONTACT US PAGE -->
+    <!-- ========================================================================= -->
+    <main x-show="currentPage === 'contact'" class="py-12 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center max-w-xl mx-auto mb-16">
+                <h1 class="text-3xl font-serif font-bold text-stone-900">Let's Stay Connected</h1>
+                <p class="text-stone-500 mt-2">Have questions about specific crop batches or tailored distribution volumes? Reach out anytime.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Contact Form -->
+                <div class="bg-stone-50 p-8 rounded-2xl border border-stone-100">
+                    <form @submit.prevent="alert('Thank you! Your inquiry has been logged securely. Our team will correspond via email within 24 hours.');" class="space-y-6">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-stone-700 tracking-wider">Full Name</label>
+                            <input type="text" required class="mt-2 w-full p-3 rounded-lg bg-white border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-stone-700 tracking-wider">Email Address</label>
+                            <input type="email" required class="mt-2 w-full p-3 rounded-lg bg-white border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-stone-700 tracking-wider">Subject</label>
+                            <input type="text" required class="mt-2 w-full p-3 rounded-lg bg-white border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-stone-700 tracking-wider">Your Message</label>
+                            <textarea rows="4" required class="mt-2 w-full p-3 rounded-lg bg-white border border-stone-200 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-emerald-700 text-white hover:bg-emerald-800 font-semibold p-3.5 rounded-lg shadow-sm transition-colors text-sm">
+                            Transmit Message
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Info panel & Map placeholder -->
+                <div class="flex flex-col justify-between space-y-8">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="p-6 bg-[#faf8f4] rounded-xl border border-amber-500/10">
+                            <span class="text-xs font-bold tracking-wider text-stone-400 block uppercase">Phone Support</span>
+                            <span class="text-base font-semibold text-stone-900 block mt-1">+212 522-XXXXXX</span>
+                            <span class="text-xs text-stone-500">Mon-Fri (9:00 - 18:00)</span>
+                        </div>
+                        <div class="p-6 bg-[#faf8f4] rounded-xl border border-amber-500/10">
+                            <span class="text-xs font-bold tracking-wider text-stone-400 block uppercase">Digital Mail</span>
+                            <span class="text-base font-semibold text-stone-900 block mt-1">support@nectaressence.ma</span>
+                        </div>
+                        <div class="p-6 bg-[#faf8f4] rounded-xl border border-amber-500/10 sm:col-span-2">
+                            <span class="text-xs font-bold tracking-wider text-stone-400 block uppercase">Central Atelier</span>
+                            <span class="text-base font-semibold text-stone-900 block mt-1">Quartier Gauthier, Boulevard d'Anfa, Casablanca, Morocco</span>
+                        </div>
+                    </div>
+
+                    <!-- Embed placeholder for Google map with native modern layout styling -->
+                    <div class="rounded-2xl overflow-hidden shadow-inner border border-stone-200 h-64 bg-stone-100 relative">
+                        <iframe class="w-full h-full border-0 grayscale opacity-80" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3323.845705351939!2d-7.6324883!3d33.5833215!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xda7d29b310d510b%3A0x2fbfd53bf596a73c!2sBd%20d&#39;Anfa%2C%20Casablanca!5e0!3m2!1sen!2sma!4v1710000000000!5m2!1sen!2sma" allowfullscreen="" loading="lazy"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+
+    <!-- --- FOOTER --- -->
+    <footer class="bg-stone-950 text-white mt-24 pt-16 pb-28 md:pb-12 border-t-4 border-amber-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-10">
+            <!-- Brand Column -->
+            <div class="space-y-4">
+                <span class="text-2xl font-serif font-bold text-amber-400">Nectar<span class="text-white">&</span>Essence</span>
+                <p class="text-xs text-stone-400 leading-relaxed">
+                    Honoring ecological purity and traditional botanical extraction methods across Moroccan ancestral landscapes.
+                </p>
+                <div class="flex space-x-3 pt-2">
+                    <!-- Insta -->
+                    <a href="#" class="p-2 bg-stone-900 rounded-lg text-amber-400 hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>
+                    </a>
+                    <!-- FB -->
+                    <a href="#" class="p-2 bg-stone-900 rounded-lg text-amber-400 hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Navigation Links -->
+            <div>
+                <h4 class="text-sm font-semibold tracking-wider uppercase text-amber-400 mb-4">Quick Links</h4>
+                <ul class="space-y-2 text-xs text-stone-400">
+                    <li><a href="#" @click.prevent="currentPage = 'home'" class="hover:text-white transition-colors">Home Storefront</a></li>
+                    <li><a href="#" @click.prevent="currentPage = 'products'; productFilter = 'honey'" class="hover:text-white transition-colors">Organic Honey Catalog</a></li>
+                    <li><a href="#" @click.prevent="currentPage = 'products'; productFilter = 'oil'" class="hover:text-white transition-colors">Medicinal & Cosmetic Oils</a></li>
+                    <li><a href="#" @click.prevent="currentPage = 'about'" class="hover:text-white transition-colors">Our Ethical Sourcing</a></li>
+                </ul>
+            </div>
+
+            <!-- Customer Service -->
+            <div>
+                <h4 class="text-sm font-semibold tracking-wider uppercase text-amber-400 mb-4">Assistance</h4>
+                <ul class="space-y-2 text-xs text-stone-400">
+                    <li><a href="#" @click.prevent="currentPage = 'contact'" class="hover:text-white transition-colors">Contact Support</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Shipping & Delivery Rates</a></li>
+                    <li><a href="#" class="hover:text-white transition-colors">Returns Policy</a></li>
+                </ul>
+            </div>
+
+            <!-- Newsletter Subscription Column -->
+            <div>
+                <h4 class="text-sm font-semibold tracking-wider uppercase text-amber-400 mb-4">Join Our Newsletter</h4>
+                <p class="text-xs text-stone-400 mb-4 leading-relaxed">Subscribe to receive harvest updates, laboratory analysis alerts, and exclusive seasonal promotions.</p>
+                <form @submit.prevent="alert('Email signed up successfully! Check your inbox for your 10% welcome coupon code.')" class="flex">
+                    <input type="email" placeholder="Your email address" required class="bg-stone-900 border border-stone-800 rounded-l-lg p-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500 text-white w-full">
+                    <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-stone-950 font-bold px-4 rounded-r-lg text-xs transition-colors">Join</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-6 border-t border-stone-900 text-center text-xs text-stone-500">
+            <p>&copy; 2026 Nectar & Essence Morocco. Handcrafted sustainably. All rights reserved.</p>
+        </div>
+    </footer>
+
+</body>
+</html>
